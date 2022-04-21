@@ -53,7 +53,7 @@ public class MyApplication extends Application {
         super.onCreate();
 
         okBleHelper = new OkBleHelper.Builder(this)
-        				// 设置UUID
+        	// 设置UUID
                 .serviceUUID(SERVICE_UUID)
                 .writeUUID(WRITE_UUID)
                 .notifyUUID(NOTIFY_UUID)
