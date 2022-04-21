@@ -18,19 +18,19 @@
 
 ```groovy
 allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
 	}
+}
 ```
 
 在`app`模块下的`gradle`中添加依赖
 
 ```groovy
-	dependencies {
-	        implementation 'com.github.Gennki:OkBle:v1.0.0'
-	}
+dependencies {
+	implementation 'com.github.Gennki:OkBle:v1.0.0'
+}
 ```
 
 
