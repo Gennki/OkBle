@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class OkBleHelper {
 
@@ -69,7 +70,7 @@ public class OkBleHelper {
     // 蓝牙设备的全局监听
     private final HashMap<Context, BleListener> bleListenerMap = new HashMap<>();
     // 蓝牙设备的写入监听
-    private final List<WriteBean> writeCallbackList = new ArrayList<>();
+    private final List<WriteBean> writeCallbackList = new CopyOnWriteArrayList<>();
 
 
     private final Handler handler = new Handler(Looper.getMainLooper()) {
@@ -120,10 +121,10 @@ public class OkBleHelper {
                                 msg.what = HANDLER_WRITE_FAIL_CALLBACK;
                                 msg.obj = writeBean;
                                 handler.sendMessage(msg);
-                                iterator.remove();
+                                writeCallbackList.remove(writeBean);
                             } else {
                                 // 如果倒计时到了0，但重试次数未到0，就重新发送
-                                iterator.remove();
+                                writeCallbackList.remove(writeBean);
                                 write(writeBean.getBluetoothGatt(), writeBean.getCharacteristic().getValue(), writeBean.getOriginTimeout(), writeBean.getRetryTimes() - 1, writeBean.getFilter(), writeBean.getResponse());
                             }
                         }
@@ -349,7 +350,7 @@ public class OkBleHelper {
                                 writeBean.setCharacteristic(characteristic);
                                 msg.obj = writeBean;
                                 handler.sendMessage(msg);
-                                iterator.remove();
+                                writeCallbackList.remove(writeBean);
                                 break;
                             }
                         }
