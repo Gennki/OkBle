@@ -13,17 +13,17 @@ import android.bluetooth.BluetoothGattCharacteristic;
  */
 public class IResponseImpl implements IResponse {
     @Override
-    public void onWriteSuccess(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+    public void onWriteSuccess(BluetoothGatt gatt, byte[] value) {
 
     }
 
     @Override
-    public void onWriteFailed(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+    public void onWriteFailed(BluetoothGatt gatt, byte[] value) {
 
     }
 
     @Override
-    public void onNotify(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+    public void onNotify(BluetoothGatt gatt, byte[] value) {
 
     }
 }

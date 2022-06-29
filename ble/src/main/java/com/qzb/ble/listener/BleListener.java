@@ -42,9 +42,9 @@ public abstract class BleListener {
      * 蓝牙收到通知
      *
      * @param gatt
-     * @param characteristic
+     * @param value
      */
-    public void onGlobalNotify(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+    public void onGlobalNotify(BluetoothGatt gatt, byte[] value) {
 
     }
 }

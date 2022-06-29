@@ -80,11 +80,11 @@ public class OkBleHelper {
             switch (msg.what) {
                 case HANDLER_WRITE_FAIL_CALLBACK:
                     WriteBean writeBean = (WriteBean) msg.obj;
-                    writeBean.getResponse().onWriteFailed(writeBean.getBluetoothGatt(), writeBean.getCharacteristic());
+                    writeBean.getResponse().onWriteFailed(writeBean.getBluetoothGatt(), writeBean.getValue());
                     break;
                 case HANDLER_WRITE_SUCCESS_CALLBACK:
                     writeBean = (WriteBean) msg.obj;
-                    writeBean.getResponse().onNotify(writeBean.getBluetoothGatt(), writeBean.getCharacteristic());
+                    writeBean.getResponse().onNotify(writeBean.getBluetoothGatt(), writeBean.getValue());
                     break;
 
             }
@@ -125,7 +125,7 @@ public class OkBleHelper {
                             } else {
                                 // 如果倒计时到了0，但重试次数未到0，就重新发送
                                 writeCallbackList.remove(writeBean);
-                                write(writeBean.getBluetoothGatt(), writeBean.getCharacteristic().getValue(), writeBean.getOriginTimeout(), writeBean.getRetryTimes() - 1, writeBean.getFilter(), writeBean.getResponse());
+                                write(writeBean.getBluetoothGatt(), writeBean.getValue(), writeBean.getOriginTimeout(), writeBean.getRetryTimes() - 1, writeBean.getFilter(), writeBean.getResponse());
                             }
                         }
                     }
@@ -337,7 +337,7 @@ public class OkBleHelper {
 
                         // 通知全局
                         for (BleListener listener : bleListenerMap.values()) {
-                            listener.onGlobalNotify(gatt, characteristic);
+                            listener.onGlobalNotify(gatt, characteristic.getValue());
                         }
 
                         // 通知订阅者
@@ -347,7 +347,7 @@ public class OkBleHelper {
                             if (writeBean.getFilter().filter(hexBytes)) {
                                 Message msg = Message.obtain();
                                 msg.what = HANDLER_WRITE_SUCCESS_CALLBACK;
-                                writeBean.setCharacteristic(characteristic);
+                                writeBean.setValue(characteristic.getValue());
                                 msg.obj = writeBean;
                                 handler.sendMessage(msg);
                                 writeCallbackList.remove(writeBean);
@@ -378,18 +378,19 @@ public class OkBleHelper {
                 return true;
             }
         }, new IResponse() {
+
             @Override
-            public void onWriteSuccess(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            public void onWriteSuccess(BluetoothGatt gatt, byte[] value) {
 
             }
 
             @Override
-            public void onWriteFailed(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            public void onWriteFailed(BluetoothGatt gatt, byte[] value) {
 
             }
 
             @Override
-            public void onNotify(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            public void onNotify(BluetoothGatt gatt, byte[] value) {
 
             }
         });
@@ -420,13 +421,13 @@ public class OkBleHelper {
             Logger.e("发送数据成功：" + BleUtil.byteToHex(writeCharacteristic.getValue()));
             // 加入回调列表，定时器会定期处理超时任务
             if (iFilter != null && iResponse != null) {
-                iResponse.onWriteSuccess(gatt, writeCharacteristic);
-                writeCallbackList.add(new WriteBean(timeout, retryTimes, iFilter, iResponse, gatt, writeCharacteristic));
+                iResponse.onWriteSuccess(gatt, writeCharacteristic.getValue());
+                writeCallbackList.add(new WriteBean(timeout, retryTimes, iFilter, iResponse, gatt, writeCharacteristic.getValue()));
             }
         } else {
             Logger.e("发送数据失败：" + BleUtil.byteToHex(writeCharacteristic.getValue()));
             if (iResponse != null) {
-                iResponse.onWriteFailed(gatt, writeCharacteristic);
+                iResponse.onWriteFailed(gatt, writeCharacteristic.getValue());
             }
         }
     }
@@ -500,17 +501,17 @@ public class OkBleHelper {
                         byte[] packageArr = Arrays.copyOfRange(currentSplitBytes, i * packageLength, currentSplitBytes.length);
                         write(gatt, packageArr, writeLongTimeout, writeLongRetryTimes, splitFilter, new IResponse() {
                             @Override
-                            public void onWriteSuccess(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                            public void onWriteSuccess(BluetoothGatt gatt, byte[] value) {
 
                             }
 
                             @Override
-                            public void onWriteFailed(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                            public void onWriteFailed(BluetoothGatt gatt, byte[] value) {
                                 synchronized (currentSplitIndex) {
                                     if (retryCount[0] >= 3) {
                                         BaseLongDataAdapter.OnWriteLongListener onWriteLongListener = baseLongDataAdapter.getOnWriteLongCallback();
                                         if (onWriteLongListener != null) {
-                                            onWriteLongListener.onWriteFailed(gatt, characteristic);
+                                            onWriteLongListener.onWriteFailed(gatt, value);
                                         }
                                         // 让当前的splitIndex直接移到最后，以此来跳出循环，结束本次发送长数据
                                         currentSplitIndex[0] = splitList.size();
@@ -523,7 +524,7 @@ public class OkBleHelper {
                             }
 
                             @Override
-                            public void onNotify(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                            public void onNotify(BluetoothGatt gatt, byte[] value) {
                                 // 发送数据片成功
                                 synchronized (currentSplitIndex) {
                                     BaseLongDataAdapter.OnWriteLongListener onWriteLongListener = baseLongDataAdapter.getOnWriteLongCallback();
@@ -533,7 +534,7 @@ public class OkBleHelper {
                                     if (currentSplitIndex[0] == splitList.size() - 1) {
                                         // 所有数据片发送成功
                                         if (onWriteLongListener != null) {
-                                            onWriteLongListener.onWriteSuccess(gatt, characteristic);
+                                            onWriteLongListener.onWriteSuccess(gatt, value);
                                         }
                                     }
                                     // 继续循环，如果还有数据片没法送，就发送下一片数据，否则就会推出循环

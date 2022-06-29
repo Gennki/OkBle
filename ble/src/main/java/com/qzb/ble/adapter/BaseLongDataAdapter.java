@@ -26,9 +26,9 @@ public abstract class BaseLongDataAdapter {
         public void onProgress(long leftTimeInSecond);
 
 
-        public void onWriteFailed(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic);
+        public void onWriteFailed(BluetoothGatt gatt, byte[] value);
 
-        public void onWriteSuccess(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic);
+        public void onWriteSuccess(BluetoothGatt gatt, byte[] value);
     }
 
     /**

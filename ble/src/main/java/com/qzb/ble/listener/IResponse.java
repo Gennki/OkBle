@@ -19,16 +19,15 @@ public interface IResponse {
      * @param characteristic
      * @param status
      */
-    public void onWriteSuccess(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic);
+    public void onWriteSuccess(BluetoothGatt gatt, byte[] value);
 
     /**
      * 蓝牙发送数据失败
      *
      * @param gatt
-     * @param characteristic
-     * @param status
+     * @param value
      */
-    public void onWriteFailed(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic);
+    public void onWriteFailed(BluetoothGatt gatt, byte[] value);
 
 
     /**
@@ -37,5 +36,5 @@ public interface IResponse {
      * @param gatt
      * @param characteristic
      */
-    public void onNotify(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic);
+    public void onNotify(BluetoothGatt gatt, byte[] value);
 }

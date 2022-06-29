@@ -26,16 +26,16 @@ public class WriteBean {
     private long timeout; // 默认三秒超时
     private int retryTimes;// 发送失败后的重试次数
     private BluetoothGatt bluetoothGatt;
-    private BluetoothGattCharacteristic characteristic;
+    private byte[] mValue;
 
-    public WriteBean(long timeout, int retryTimes, IFilter filter, IResponse response, BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic characteristic) {
+    public WriteBean(long timeout, int retryTimes, IFilter filter, IResponse response, BluetoothGatt bluetoothGatt, byte[] mValue) {
         this.originTimeout = timeout;
         this.timeout = timeout;
         this.retryTimes = retryTimes;
         this.filter = filter;
         this.response = response;
         this.bluetoothGatt = bluetoothGatt;
-        this.characteristic = characteristic;
+        this.mValue = mValue;
     }
 
 
@@ -71,12 +71,12 @@ public class WriteBean {
         this.bluetoothGatt = bluetoothGatt;
     }
 
-    public BluetoothGattCharacteristic getCharacteristic() {
-        return characteristic;
+    public byte[] getValue() {
+        return mValue;
     }
 
-    public void setCharacteristic(BluetoothGattCharacteristic characteristic) {
-        this.characteristic = characteristic;
+    public void setValue(byte[] mValue) {
+        this.mValue = mValue;
     }
 
     public int getRetryTimes() {

@@ -1,10 +1,8 @@
 package com.qzb.bleservice.sample;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
@@ -12,15 +10,11 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.ParcelUuid;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -107,19 +101,19 @@ public class SecondActivity extends AppCompatActivity {
                     }
                 }, new IResponse() {
                     @Override
-                    public void onWriteSuccess(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                        stateTV.setText("发送数据成功:" + BleUtil.byteToHex(characteristic.getValue()));
+                    public void onWriteSuccess(BluetoothGatt gatt, byte[] value) {
+                        stateTV.setText("发送数据成功:" + BleUtil.byteToHex(value));
                     }
 
                     @Override
-                    public void onWriteFailed(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                        stateTV.setText("发送数据失败:" + BleUtil.byteToHex(characteristic.getValue()));
+                    public void onWriteFailed(BluetoothGatt gatt, byte[] value) {
+                        stateTV.setText("发送数据失败:" + BleUtil.byteToHex(value));
 
                     }
 
                     @Override
-                    public void onNotify(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                        stateTV.setText("获取数据:" + BleUtil.byteToHex(characteristic.getValue()));
+                    public void onNotify(BluetoothGatt gatt, byte[] value) {
+                        stateTV.setText("获取数据:" + BleUtil.byteToHex(value));
                     }
                 });
             } catch (Exception e) {
@@ -152,12 +146,12 @@ public class SecondActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onWriteFailed(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                    public void onWriteFailed(BluetoothGatt gatt, byte[] value) {
                         stateTV.setText("写入失败");
                     }
 
                     @Override
-                    public void onWriteSuccess(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                    public void onWriteSuccess(BluetoothGatt gatt, byte[] value) {
                         stateTV.setText("写入成功");
                     }
                 });
@@ -196,9 +190,9 @@ public class SecondActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onGlobalNotify(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                super.onGlobalNotify(gatt, characteristic);
-                Log.e(TAG, "全局获取数据:" + BleUtil.byteToHex(characteristic.getValue()));
+            public void onGlobalNotify(BluetoothGatt gatt, byte[] value) {
+                super.onGlobalNotify(gatt, value);
+                Log.e(TAG, "全局获取数据:" + BleUtil.byteToHex(value));
             }
         });
     }
