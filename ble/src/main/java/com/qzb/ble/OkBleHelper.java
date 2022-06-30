@@ -315,18 +315,19 @@ public class OkBleHelper {
                             for (BleListener listener : bleListenerMap.values()) {
                                 listener.onGlobalNotify(gatt, hexBytes);
                             }
+
+                            // 通知订阅者
+                            Iterator<WriteBean> iterator = writeCallbackList.iterator();
+                            while (iterator.hasNext()) {
+                                WriteBean writeBean = iterator.next();
+                                if (writeBean.getFilter().filter(hexBytes)) {
+                                    writeBean.getResponse().onNotify(writeBean.getBluetoothGatt(), writeBean.getValue());
+                                    writeCallbackList.remove(writeBean);
+                                    break;
+                                }
+                            }
                         });
 
-                        // 通知订阅者
-                        Iterator<WriteBean> iterator = writeCallbackList.iterator();
-                        while (iterator.hasNext()) {
-                            WriteBean writeBean = iterator.next();
-                            if (writeBean.getFilter().filter(hexBytes)) {
-                                handler.post(() -> writeBean.getResponse().onNotify(writeBean.getBluetoothGatt(), writeBean.getValue()));
-                                writeCallbackList.remove(writeBean);
-                                break;
-                            }
-                        }
                     }
                 }
             }
