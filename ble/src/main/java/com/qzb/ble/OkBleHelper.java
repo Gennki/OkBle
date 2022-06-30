@@ -22,7 +22,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,11 +31,9 @@ import com.qzb.ble.adapter.BaseLongDataAdapter;
 import com.qzb.ble.listener.BleListener;
 import com.qzb.ble.listener.IFilter;
 import com.qzb.ble.listener.IMergePackage;
-import com.qzb.ble.listener.IMergePackageImpl;
 import com.qzb.ble.listener.IResponse;
 import com.qzb.ble.utils.BleUtil;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,33 +60,12 @@ public class OkBleHelper {
     private final BluetoothAdapter bluetoothAdapter;
 
 
-    private static final int HANDLER_WRITE_FAIL_CALLBACK = 1;
-    private static final int HANDLER_WRITE_SUCCESS_CALLBACK = 2;
-
-
     // 蓝牙设备的全局监听
     private final HashMap<Context, BleListener> bleListenerMap = new HashMap<>();
     // 蓝牙设备的写入监听
     private final List<WriteBean> writeCallbackList = new CopyOnWriteArrayList<>();
 
-
-    private final Handler handler = new Handler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case HANDLER_WRITE_FAIL_CALLBACK:
-                    WriteBean writeBean = (WriteBean) msg.obj;
-                    writeBean.getResponse().onWriteFailed(writeBean.getBluetoothGatt(), writeBean.getValue());
-                    break;
-                case HANDLER_WRITE_SUCCESS_CALLBACK:
-                    writeBean = (WriteBean) msg.obj;
-                    writeBean.getResponse().onNotify(writeBean.getBluetoothGatt(), writeBean.getValue());
-                    break;
-
-            }
-        }
-    };
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     public OkBleHelper(Context context, String serviceUUID, String writeUUID, String notifyUUID, int writeRetryTimes, int writeLongRetryTimes, long writeTimeout, long writeLongTimeout, IMergePackage mergePackage) {
         appContext = context.getApplicationContext();
@@ -117,10 +93,7 @@ public class OkBleHelper {
                         if (writeBean.getTimeout() <= 0) {
                             if (writeBean.getRetryTimes() <= 0) {
                                 // 如果倒计时到了0，并且重试次数也到了0，就判断为发送失败了
-                                Message msg = Message.obtain();
-                                msg.what = HANDLER_WRITE_FAIL_CALLBACK;
-                                msg.obj = writeBean;
-                                handler.sendMessage(msg);
+                                handler.post(() -> writeBean.getResponse().onWriteFailed(writeBean.getBluetoothGatt(), writeBean.getValue()));
                                 writeCallbackList.remove(writeBean);
                             } else {
                                 // 如果倒计时到了0，但重试次数未到0，就重新发送
@@ -274,30 +247,33 @@ public class OkBleHelper {
             Logger.i("缺少Manifest.permission.BLUETOOTH_CONNECT权限");
             return null;
         }
-        return device.connectGatt(appContext, false, new BluetoothGattCallback() {
+        BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
             @SuppressLint("MissingPermission")
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                 super.onConnectionStateChange(gatt, status, newState);
-                switch (newState) {
-                    case BluetoothProfile.STATE_CONNECTED:
-                        Logger.i("服务连接成功");
-                        gatt.discoverServices();
-                        break;
-                    case BluetoothProfile.STATE_DISCONNECTED:
-                        // 断开蓝牙后，释放资源
-                        gatt.close();
-                        break;
-                }
-                for (BleListener listener : bleListenerMap.values()) {
-                    listener.onConnectionStateChange(gatt, status, newState);
-
-                    // 连接失败
-                    if (status != BluetoothGatt.GATT_SUCCESS) {
-                        listener.onConnectFail(gatt, status, newState);
+                handler.post(() -> {
+                    switch (newState) {
+                        case BluetoothProfile.STATE_CONNECTED:
+                            Logger.i("服务连接成功");
+                            gatt.discoverServices();
+                            break;
+                        case BluetoothProfile.STATE_DISCONNECTED:
+                            // 断开蓝牙后，释放资源
+                            gatt.close();
+                            break;
                     }
-                }
-
+                    // 回调切换到主线程
+                    handler.post(() -> {
+                        for (BleListener listener : bleListenerMap.values()) {
+                            listener.onConnectionStateChange(gatt, status, newState);
+                            // 连接失败
+                            if (status != BluetoothGatt.GATT_SUCCESS) {
+                                listener.onConnectFail(gatt, status, newState);
+                            }
+                        }
+                    });
+                });
             }
 
             @Override
@@ -333,23 +309,20 @@ public class OkBleHelper {
                         // 收到通知
                         Logger.e("收到数据：" + hex);
                         byte[] hexBytes = BleUtil.hexStringToByteArray(hex);
-                        characteristic.setValue(hexBytes);
 
                         // 通知全局
-                        for (BleListener listener : bleListenerMap.values()) {
-                            listener.onGlobalNotify(gatt, characteristic.getValue());
-                        }
+                        handler.post(() -> {
+                            for (BleListener listener : bleListenerMap.values()) {
+                                listener.onGlobalNotify(gatt, hexBytes);
+                            }
+                        });
 
                         // 通知订阅者
                         Iterator<WriteBean> iterator = writeCallbackList.iterator();
                         while (iterator.hasNext()) {
                             WriteBean writeBean = iterator.next();
                             if (writeBean.getFilter().filter(hexBytes)) {
-                                Message msg = Message.obtain();
-                                msg.what = HANDLER_WRITE_SUCCESS_CALLBACK;
-                                writeBean.setValue(characteristic.getValue());
-                                msg.obj = writeBean;
-                                handler.sendMessage(msg);
+                                handler.post(() -> writeBean.getResponse().onNotify(writeBean.getBluetoothGatt(), writeBean.getValue()));
                                 writeCallbackList.remove(writeBean);
                                 break;
                             }
@@ -357,7 +330,13 @@ public class OkBleHelper {
                     }
                 }
             }
-        });
+        };
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return device.connectGatt(appContext, false, bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
+        } else {
+            return device.connectGatt(appContext, false, bluetoothGattCallback);
+        }
     }
 
 
