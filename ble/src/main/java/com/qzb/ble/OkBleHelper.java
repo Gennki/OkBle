@@ -321,7 +321,7 @@ public class OkBleHelper {
                             while (iterator.hasNext()) {
                                 WriteBean writeBean = iterator.next();
                                 if (writeBean.getFilter().filter(hexBytes)) {
-                                    writeBean.getResponse().onNotify(writeBean.getBluetoothGatt(), writeBean.getValue());
+                                    writeBean.getResponse().onNotify(writeBean.getBluetoothGatt(), hexBytes);
                                     writeCallbackList.remove(writeBean);
                                     break;
                                 }
