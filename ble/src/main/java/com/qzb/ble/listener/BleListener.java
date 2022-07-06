@@ -20,9 +20,8 @@ public abstract class BleListener {
      *
      * @param gatt
      * @param status
-     * @param newState
      */
-    public void onConnectFail(BluetoothGatt gatt, int status, int newState) {
+    public void onConnectFail(BluetoothGatt gatt, int status) {
 
     }
 
@@ -30,10 +29,9 @@ public abstract class BleListener {
      * 蓝牙状态改变
      *
      * @param gatt
-     * @param status
-     * @param newState
+     * @param state
      */
-    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+    public void onConnectionStateChange(BluetoothGatt gatt, int state) {
 
     }
 

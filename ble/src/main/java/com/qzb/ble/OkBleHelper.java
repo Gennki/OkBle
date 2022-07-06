@@ -50,6 +50,11 @@ public class OkBleHelper {
     private final String serviceUUID;
     private final String writeUUID;
     private final String notifyUUID;
+    public static final int STATE_CONNECTING = 1;
+    public static final int STATE_CONNECTED = 2;
+    public static final int STATE_DISCONNECTING = 3;
+    public static final int STATE_DISCONNECTED = 4;
+
     private final int writeRetryTimes;
     private final int writeLongRetryTimes;
     private final long writeTimeout;
@@ -236,6 +241,12 @@ public class OkBleHelper {
         return connectDevice(device);
     }
 
+    private void changeConnectState(BluetoothGatt gatt, int state) {
+        for (BleListener listener : bleListenerMap.values()) {
+            listener.onConnectionStateChange(gatt, state);
+        }
+    }
+
     /**
      * 连接指定设备
      *
@@ -261,18 +272,16 @@ public class OkBleHelper {
                         case BluetoothProfile.STATE_DISCONNECTED:
                             // 断开蓝牙后，释放资源
                             gatt.close();
+                            changeConnectState(gatt, STATE_DISCONNECTED);
                             break;
                     }
-                    // 回调切换到主线程
-                    handler.post(() -> {
+
+                    // 连接失败
+                    if (status != BluetoothGatt.GATT_SUCCESS) {
                         for (BleListener listener : bleListenerMap.values()) {
-                            listener.onConnectionStateChange(gatt, status, newState);
-                            // 连接失败
-                            if (status != BluetoothGatt.GATT_SUCCESS) {
-                                listener.onConnectFail(gatt, status, newState);
-                            }
+                            listener.onConnectFail(gatt, status);
                         }
-                    });
+                    }
                 });
             }
 
@@ -284,6 +293,8 @@ public class OkBleHelper {
                     return;
                 }
                 if (status == BluetoothGatt.GATT_SUCCESS) {
+                    Logger.i("发现服务成功");
+                    changeConnectState(gatt, STATE_CONNECTED);
                     BluetoothGattService service = gatt.getService(UUID.fromString(serviceUUID));
                     BluetoothGattCharacteristic notifyCharacteristic = service.getCharacteristic(UUID.fromString(notifyUUID));
                     gatt.setCharacteristicNotification(notifyCharacteristic, true);
@@ -333,11 +344,14 @@ public class OkBleHelper {
             }
         };
 
+        BluetoothGatt gatt;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return device.connectGatt(appContext, false, bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
+            gatt = device.connectGatt(appContext, false, bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
         } else {
-            return device.connectGatt(appContext, false, bluetoothGattCallback);
+            gatt = device.connectGatt(appContext, false, bluetoothGattCallback);
         }
+        changeConnectState(gatt, STATE_CONNECTING);
+        return gatt;
     }
 
 
@@ -541,6 +555,7 @@ public class OkBleHelper {
             Logger.i("缺少Manifest.permission.BLUETOOTH_CONNECT权限");
             return;
         }
+        changeConnectState(bluetoothGatt, STATE_DISCONNECTING);
         bluetoothGatt.disconnect();
     }
 

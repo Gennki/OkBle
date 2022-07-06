@@ -165,27 +165,27 @@ public class SecondActivity extends AppCompatActivity {
         // 注册监听
         chiereOneBleHelper.addBleListener(this, new BleListener() {
             @Override
-            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                super.onConnectionStateChange(gatt, status, newState);
-                switch (newState) {
-                    case BluetoothProfile.STATE_CONNECTING:
+            public void onConnectionStateChange(BluetoothGatt gatt, int state) {
+                super.onConnectionStateChange(gatt, state);
+                switch (state) {
+                    case OkBleHelper.STATE_CONNECTING:
                         Log.e(TAG, "连接GATT服务器中");
                         break;
-                    case BluetoothProfile.STATE_CONNECTED:
+                    case OkBleHelper.STATE_CONNECTED:
                         Log.e(TAG, "GATT服务器连接成功");
                         break;
-                    case BluetoothProfile.STATE_DISCONNECTED:
+                    case OkBleHelper.STATE_DISCONNECTED:
                         Log.e(TAG, "GATT服务器已断开");
                         break;
-                    case BluetoothProfile.STATE_DISCONNECTING:
+                    case OkBleHelper.STATE_DISCONNECTING:
                         Log.e(TAG, "GATT服务器断开中");
                         break;
                 }
             }
 
             @Override
-            public void onConnectFail(BluetoothGatt gatt, int status, int newState) {
-                super.onConnectFail(gatt, status, newState);
+            public void onConnectFail(BluetoothGatt gatt, int status) {
+                super.onConnectFail(gatt, status);
                 Log.e(TAG, "连接GATT服务器失败");
             }
 
