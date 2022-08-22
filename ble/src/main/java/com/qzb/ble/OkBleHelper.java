@@ -222,7 +222,9 @@ public class OkBleHelper {
             return;
         }
         BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-        bluetoothLeScanner.stopScan(scanCallback);
+        if (bluetoothLeScanner != null) {
+            bluetoothLeScanner.stopScan(scanCallback);
+        }
     }
 
 
@@ -408,6 +410,10 @@ public class OkBleHelper {
             return;
         }
         BluetoothGattService service = gatt.getService(UUID.fromString(serviceUUID));
+        if (service == null) {
+            Logger.i("BluetoothGattService不能为null");
+            return;
+        }
         BluetoothGattCharacteristic writeCharacteristic = service.getCharacteristic(UUID.fromString(writeUUID));
         writeCharacteristic.setValue(bytes);
 
