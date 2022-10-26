@@ -50,6 +50,7 @@ public class OkBleHelper {
     private final String serviceUUID;
     private final String writeUUID;
     private final String notifyUUID;
+    private final int mtu;
     public static final int STATE_CONNECTING = 1;
     public static final int STATE_CONNECTED = 2;
     public static final int STATE_DISCONNECTING = 3;
@@ -72,11 +73,12 @@ public class OkBleHelper {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
-    public OkBleHelper(Context context, String serviceUUID, String writeUUID, String notifyUUID, int writeRetryTimes, int writeLongRetryTimes, long writeTimeout, long writeLongTimeout, IMergePackage mergePackage) {
+    public OkBleHelper(Context context, String serviceUUID, String writeUUID, String notifyUUID, int mtu, int writeRetryTimes, int writeLongRetryTimes, long writeTimeout, long writeLongTimeout, IMergePackage mergePackage) {
         appContext = context.getApplicationContext();
         this.serviceUUID = serviceUUID;
         this.writeUUID = writeUUID;
         this.notifyUUID = notifyUUID;
+        this.mtu = mtu;
         this.writeRetryTimes = writeRetryTimes;
         this.writeLongRetryTimes = writeLongRetryTimes;
         this.writeTimeout = writeTimeout;
@@ -269,7 +271,7 @@ public class OkBleHelper {
                     switch (newState) {
                         case BluetoothProfile.STATE_CONNECTED:
                             Logger.i("服务连接成功");
-                            gatt.discoverServices();
+                            gatt.requestMtu(mtu);
                             break;
                         case BluetoothProfile.STATE_DISCONNECTED:
                             // 断开蓝牙后，释放资源
@@ -285,6 +287,13 @@ public class OkBleHelper {
                         }
                     }
                 });
+            }
+
+            @SuppressLint("MissingPermission")
+            @Override
+            public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+                super.onMtuChanged(gatt, mtu, status);
+                gatt.discoverServices();
             }
 
             @Override
@@ -622,6 +631,7 @@ public class OkBleHelper {
         private long writeTimeout = 3000;
         private long writeLongTimeout = 3000;
         private IMergePackage mergePackage;
+        private int mtu = 20;
 
         public Builder(Context context) {
             this.context = context;
@@ -668,9 +678,14 @@ public class OkBleHelper {
             return this;
         }
 
+        public Builder mtu(int mtu) {
+            this.mtu = mtu;
+            return this;
+        }
+
 
         public OkBleHelper build() {
-            return new OkBleHelper(context, serviceUUID, writeUUID, notifyUUID, writeRetryTimes, writeLongRetryTimes, writeTimeout, writeLongTimeout, mergePackage);
+            return new OkBleHelper(context, serviceUUID, writeUUID, notifyUUID, mtu, writeRetryTimes, writeLongRetryTimes, writeTimeout, writeLongTimeout, mergePackage);
         }
     }
 
