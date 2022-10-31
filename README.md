@@ -29,7 +29,7 @@ allprojects {
 
 ```groovy
 dependencies {
-	implementation 'com.github.Gennki:OkBle:v1.0.6'
+	implementation 'com.github.Gennki:OkBle:v1.0.7'
 }
 ```
 
@@ -57,7 +57,7 @@ public class MyApplication extends Application {
                 .serviceUUID(SERVICE_UUID)
                 .writeUUID(WRITE_UUID)
                 .notifyUUID(NOTIFY_UUID)
-              
+              	.mtu(512)// 设置mtu
                 .writeTimeout(1000)// 设置短数据读写超时1000毫秒
                 .writeLongTimeout(3000)// 设置长数据读写超时3000毫秒
                 .writeRetryTime(3)// 设置短数据超时后重发次数
