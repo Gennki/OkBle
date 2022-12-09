@@ -29,7 +29,7 @@ allprojects {
 
 ```groovy
 dependencies {
-	implementation 'com.github.Gennki:OkBle:v1.0.7'
+	implementation 'com.github.Gennki:OkBle:v1.0.8'
 }
 ```
 
