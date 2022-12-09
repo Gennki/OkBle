@@ -430,13 +430,13 @@ public class OkBleHelper {
             Logger.e("发送数据成功：" + BleUtil.byteToHex(writeCharacteristic.getValue()));
             // 加入回调列表，定时器会定期处理超时任务
             if (iFilter != null && iResponse != null) {
-                iResponse.onWriteSuccess(gatt, writeCharacteristic.getValue());
+                handler.post(() -> iResponse.onWriteSuccess(gatt, writeCharacteristic.getValue()));
                 writeCallbackList.add(new WriteBean(timeout, retryTimes, iFilter, iResponse, gatt, writeCharacteristic.getValue()));
             }
         } else {
             Logger.e("发送数据失败：" + BleUtil.byteToHex(writeCharacteristic.getValue()));
             if (iResponse != null) {
-                iResponse.onWriteFailed(gatt, writeCharacteristic.getValue());
+                handler.post(() -> iResponse.onWriteFailed(gatt, writeCharacteristic.getValue()));
             }
         }
     }
