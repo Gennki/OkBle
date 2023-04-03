@@ -505,10 +505,10 @@ public class OkBleHelper {
                     Thread.sleep(200);
                     if (i < 4) {
                         byte[] packageArr = Arrays.copyOfRange(currentSplitBytes, i * packageLength, (i + 1) * packageLength);
-                        write(gatt, packageArr, writeLongTimeout, writeLongRetryTimes, null, null);
+                        write(gatt, packageArr, 0, 0, null, null);
                     } else {
                         byte[] packageArr = Arrays.copyOfRange(currentSplitBytes, i * packageLength, currentSplitBytes.length);
-                        write(gatt, packageArr, writeLongTimeout, writeLongRetryTimes, splitFilter, new IResponse() {
+                        write(gatt, packageArr, writeLongTimeout, 0, splitFilter, new IResponse() {
                             @Override
                             public void onWriteSuccess(BluetoothGatt gatt, byte[] value) {
 
@@ -517,7 +517,7 @@ public class OkBleHelper {
                             @Override
                             public void onWriteFailed(BluetoothGatt gatt, byte[] value) {
                                 synchronized (currentSplitIndex) {
-                                    if (retryCount[0] >= 3) {
+                                    if (retryCount[0] >= writeLongRetryTimes) {
                                         BaseLongDataAdapter.OnWriteLongListener onWriteLongListener = baseLongDataAdapter.getOnWriteLongCallback();
                                         if (onWriteLongListener != null) {
                                             onWriteLongListener.onWriteFailed(gatt, value);
