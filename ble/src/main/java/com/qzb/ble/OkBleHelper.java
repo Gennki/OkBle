@@ -432,6 +432,8 @@ public class OkBleHelper {
             if (iFilter != null && iResponse != null) {
                 handler.post(() -> iResponse.onWriteSuccess(gatt, writeCharacteristic.getValue()));
                 writeCallbackList.add(new WriteBean(timeout, retryTimes, iFilter, iResponse, gatt, writeCharacteristic.getValue()));
+            } else if (iResponse != null) {
+                handler.post(() -> iResponse.onWriteSuccess(gatt, writeCharacteristic.getValue()));
             }
         } else {
             Logger.e("发送数据失败：" + BleUtil.byteToHex(writeCharacteristic.getValue()));
