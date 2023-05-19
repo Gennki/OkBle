@@ -323,7 +323,7 @@ public class OkBleHelper {
                     // 防止数据粘连
                     List<String> hexList;
                     if (mergePackage != null) {
-                        hexList = mergePackage.getHexList(characteristic.getValue());
+                        hexList = mergePackage.getHexList(gatt, characteristic.getValue());
                     } else {
                         hexList = Collections.singletonList(BleUtil.byteToHex(characteristic.getValue()));
                     }

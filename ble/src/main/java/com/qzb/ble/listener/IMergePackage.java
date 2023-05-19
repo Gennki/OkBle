@@ -1,5 +1,7 @@
 package com.qzb.ble.listener;
 
+import android.bluetooth.BluetoothGatt;
+
 import java.util.List;
 
 /**
@@ -11,5 +13,5 @@ import java.util.List;
  * @Description:
  */
 public interface IMergePackage {
-    List<String> getHexList(byte[] bytes);
+    List<String> getHexList(BluetoothGatt gatt, byte[] bytes);
 }

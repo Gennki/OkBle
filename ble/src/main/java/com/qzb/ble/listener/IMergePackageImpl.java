@@ -1,5 +1,6 @@
 package com.qzb.ble.listener;
 
+import android.bluetooth.BluetoothGatt;
 import android.util.Log;
 
 import com.qzb.ble.utils.CRC8Util;
@@ -38,7 +39,7 @@ public class IMergePackageImpl implements IMergePackage {
 
 
     @Override
-    public List<String> getHexList(byte[] bytes) {
+    public List<String> getHexList(BluetoothGatt gatt, byte[] bytes) {
         List<String> hexList = new ArrayList<>();
         for (int i = 0; i < bytes.length; i++, byteIndex++) {
             byte currentByte = bytes[i];
